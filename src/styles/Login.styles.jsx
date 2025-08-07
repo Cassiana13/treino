@@ -1,4 +1,3 @@
-// src/styles/Login.styles.jsx
 import styled from "styled-components";
 
 export const PageWrapper = styled.div`
@@ -15,19 +14,24 @@ export const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(28, 28, 28, 0.85);
+  background-color: rgba(
+    30,
+    41,
+    59,
+    0.85
+  ); // theme.colors.cardBg com transparência
   padding: 40px;
   border-radius: 10px;
-  box-shadow: 0 0 25px rgba(255, 0, 0, 0.3);
-  color: #fff;
+  box-shadow: ${({ theme }) => theme.effects.shadow};
+  color: ${({ theme }) => theme.colors.text};
   flex-direction: column;
 `;
 
 export const Title = styled.h2`
   font-size: 36px;
   font-weight: 900;
-  color: #ff3c00;
-  font-family: "Oswald", sans-serif;
+  color: ${({ theme }) => theme.colors.primary};
+  font-family: ${({ theme }) => theme.fonts.heading};
   margin-bottom: 30px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -38,48 +42,30 @@ export const Form = styled.form`
   flex-direction: column;
 `;
 
-/*export const Input = styled.input`
-  padding: 12px;
-  margin-bottom: 15px;
-  border-radius: 6px;
-  border: 1px solid #333;
-  background-color: #111;
-  color: #fff;
-  font-size: 15px;
-
-  &::placeholder {
-    color: #888;
-  }
-
-  &:focus {
-    border-color: #ff4500;
-    outline: none;
-  }
-`;*/
-
 export const Button = styled.button`
   padding: 14px;
   margin-top: 10px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(90deg, #ff4500 0%, #ff2400 100%);
-  color: #fff;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
   transition: 0.3s;
-  box-shadow: 0 0 10px rgba(255, 69, 0, 0.4);
+  box-shadow: ${({ theme }) => theme.effects.shadow};
 
   &:hover {
-    background: linear-gradient(90deg, #ff2400 0%, #ff0000 100%);
+    background-color: ${({ theme }) => theme.colors.accent};
+    box-shadow: ${({ theme }) => theme.effects.glow};
     transform: scale(1.02);
   }
 `;
 
 export const LinkButton = styled.button`
   margin-top: 10px;
-  color: #ff4500;
+  color: ${({ theme }) => theme.colors.primary};
   background: none;
   border: none;
   font-size: 14px;
@@ -87,14 +73,15 @@ export const LinkButton = styled.button`
   text-decoration: underline;
 
   &:hover {
-    color: #ffa07a;
+    color: ${({ theme }) => theme.colors.secondary};
   }
 `;
 
 export const ErrorMessage = styled.p`
-  color: red;
+  color: ${({ theme }) => theme.colors.error};
   margin-bottom: 15px;
 `;
+
 export const InputWrapper = styled.div`
   position: relative;
   margin-bottom: 20px;
@@ -104,7 +91,7 @@ export const Label = styled.label`
   position: absolute;
   top: 14px;
   left: 14px;
-  color: #888;
+  color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 16px;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -113,28 +100,35 @@ export const Label = styled.label`
 export const Input = styled.input`
   width: 100%;
   padding: 14px 12px 14px 12px;
-  border: 1px solid #444;
+  border: 1px solid ${({ theme }) => theme.colors.textSecondary};
   border-radius: 6px;
-  background-color: #111;
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: ${({ theme }) => theme.colors.text};
   font-size: 15px;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: ${({ theme }) => theme.effects.glow};
+    outline: none;
+  }
 
   &:focus + label,
   &:not(:placeholder-shown) + label {
     top: -10px;
     left: 10px;
     font-size: 12px;
-    color: #ff4500;
-    background-color: #111;
+    color: ${({ theme }) => theme.colors.primary};
+    background-color: rgba(30, 41, 59, 0.85);
     padding: 0 4px;
   }
 `;
+
 export const GoogleContainer = styled.div`
   text-align: center;
   margin: 1.5rem 0;
 
   p {
-    color: #666;
+    color: ${({ theme }) => theme.colors.textSecondary};
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
   }

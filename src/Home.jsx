@@ -7,6 +7,7 @@ import {
   updateWorkout,
   deleteWorkout,
 } from "./services/treinosService";
+import { useRef } from "react";
 import TreinoForm from "./componentes/TreinoForm";
 import TreinoItem from "./componentes/TreinoItem";
 import { auth } from "./firebase/firebase.js";
@@ -21,6 +22,7 @@ import {
   EmptyMessage,
   LoadingMessage,
   LogoutButton,
+  FormFloatingWrapper,
 } from "./styles/Home.styles.jsx";
 
 function Home({ onLogout }) {
@@ -31,7 +33,26 @@ function Home({ onLogout }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+  const [expandedDays, setExpandedDays] = useState({
+    Segunda: false,
+    Terça: false,
+    Quarta: false,
+    Quinta: false,
+    Sexta: false,
+  });
 
+  const toggleDay = (dia) => {
+    setExpandedDays((prev) => ({
+      ...prev,
+      [dia]: !prev[dia],
+    }));
+  };
+  const formRef = useRef(null);
+  const editTreino = (treino) => {
+    setTreinoEdit(treino);
+    // Rola a página até o formulário
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
   useEffect(() => {
     const carregarTreinos = async () => {
       try {
@@ -78,10 +99,6 @@ function Home({ onLogout }) {
     }
   };
 
-  const editTreino = (treino) => {
-    setTreinoEdit(treino);
-  };
-
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
@@ -106,11 +123,13 @@ function Home({ onLogout }) {
         </LogoutButton>
       </Header>
 
-      <TreinoForm
-        onSubmit={addTreino}
-        treinoEdit={treinoEdit}
-        setTreinoEdit={setTreinoEdit}
-      />
+      <div ref={formRef} style={{ margin: "1rem 0" }}>
+        <TreinoForm
+          onSubmit={addTreino}
+          treinoEdit={treinoEdit}
+          setTreinoEdit={setTreinoEdit}
+        />
+      </div>
 
       {loading ? (
         <LoadingMessage>
@@ -124,21 +143,28 @@ function Home({ onLogout }) {
 
             return (
               <DayCard key={dia}>
-                <DayTitle>{dia}</DayTitle>
-                <TreinoList>
-                  {treinosDoDia.length > 0 ? (
-                    treinosDoDia.map((treino) => (
-                      <TreinoItem
-                        key={treino.id}
-                        treino={treino}
-                        onEdit={editTreino}
-                        onDelete={deleteTreino}
-                      />
-                    ))
-                  ) : (
-                    <EmptyMessage>Nenhum treino cadastrado</EmptyMessage>
-                  )}
-                </TreinoList>
+                <DayTitle
+                  onClick={() => toggleDay(dia)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {dia} {expandedDays[dia] ? "−" : "+"}
+                </DayTitle>
+                {expandedDays[dia] && (
+                  <TreinoList>
+                    {treinosDoDia.length > 0 ? (
+                      treinosDoDia.map((treino) => (
+                        <TreinoItem
+                          key={treino.id}
+                          treino={treino}
+                          onEdit={editTreino}
+                          onDelete={deleteTreino}
+                        />
+                      ))
+                    ) : (
+                      <EmptyMessage>Nenhum treino cadastrado</EmptyMessage>
+                    )}
+                  </TreinoList>
+                )}
               </DayCard>
             );
           })}

@@ -6,6 +6,7 @@ import {
   CancelButton,
   FormWrapper,
   SelectWrapper,
+  EditIndicator,
 } from "../styles/TreinoFrom.styles";
 import { useTheme } from "styled-components";
 
@@ -58,6 +59,7 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
   return (
     <FormWrapper>
       <EditSection>
+        {treinoEdit && <EditIndicator>EDITANDO TREINO</EditIndicator>}
         <h2>{treinoEdit ? "Editar Treino" : "Adicionar Treino"}</h2>
         <form onSubmit={handleSubmit}>
           <FormGroup>

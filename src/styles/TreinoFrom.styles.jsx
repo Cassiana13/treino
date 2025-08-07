@@ -21,6 +21,7 @@ export const EditSection = styled.div`
     margin-bottom: 2rem;
   }
 `;
+
 export const FormGroup = styled.div`
   margin-bottom: 1.5rem;
 
@@ -30,7 +31,7 @@ export const FormGroup = styled.div`
     padding: 0.75rem;
     border: 1px solid ${({ theme }) => theme.colors.primary};
     border-radius: 6px;
-    background-color: ${({ theme }) => theme.colors.background};
+    background-color: ${({ theme }) => theme.colors.cardBg};
     color: ${({ theme }) => theme.colors.text};
     font-size: 1rem;
 
@@ -45,8 +46,11 @@ export const FormGroup = styled.div`
 export const SaveButton = styled.button`
   width: 100%;
   padding: 14px;
-  background: linear-gradient(90deg, #ff4500 0%, #ff2400 100%);
-  color: white;
+  background: ${({ theme }) =>
+    `linear-gradient(90deg, ${theme.colors.primary} 0%, ${
+      theme.colors.accent || "#ff2400"
+    } 100%)`};
+  color: ${({ theme }) => theme.colors.text};
   border: none;
   border-radius: 8px;
   font-family: ${({ theme }) => theme.fonts.heading};
@@ -58,7 +62,10 @@ export const SaveButton = styled.button`
   box-shadow: ${({ theme }) => theme.effects.glow};
 
   &:hover {
-    background: linear-gradient(90deg, #ff2400 0%, #ff0000 100%);
+    background: ${({ theme }) =>
+      `linear-gradient(90deg, ${
+        theme.colors.accent || "#ff2400"
+      } 0%, #ff0000 100%)`};
     transform: scale(1.02);
   }
 `;
@@ -76,7 +83,12 @@ export const CancelButton = styled.button`
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: rgba(42, 157, 143, 0.1);
+    background-color: rgba(
+      42,
+      157,
+      143,
+      0.1
+    ); /* Se quiser pode alterar para algo do theme */
   }
 `;
 
@@ -96,9 +108,9 @@ export const Input = styled.input`
   width: 100%;
   padding: 14px 12px;
   margin-bottom: 1.5rem;
-  border: 1px solid #444;
+  border: 1px solid ${({ theme }) => theme.colors.textSecondary};
   border-radius: 6px;
-  background-color: #111;
+  background-color: ${({ theme }) => theme.colors.cardBg};
   color: ${({ theme }) => theme.colors.text};
   font-size: 1rem;
 
@@ -108,6 +120,7 @@ export const Input = styled.input`
     box-shadow: ${({ theme }) => theme.effects.glow};
   }
 `;
+
 export const SelectWrapper = styled.div`
   position: relative;
   margin-bottom: 1.5rem;
@@ -118,7 +131,7 @@ export const SelectWrapper = styled.div`
     border: 1px solid ${({ theme }) => theme.colors.primary};
     border-radius: 6px;
     font-size: 1rem;
-    background-color: ${({ theme }) => theme.colors.cardBg || "#252525"};
+    background-color: ${({ theme }) => theme.colors.cardBg};
     color: ${({ theme }) => theme.colors.text};
     appearance: none;
     cursor: pointer;
@@ -140,4 +153,14 @@ export const SelectWrapper = styled.div`
     pointer-events: none;
     font-size: 0.8rem;
   }
+`;
+
+export const EditIndicator = styled.div`
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-weight: bold;
 `;
