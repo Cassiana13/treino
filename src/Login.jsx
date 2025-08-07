@@ -15,8 +15,9 @@ import {
   Label,
   GoogleContainer,
   GoogleButton,
+  
 } from "./styles/Login.styles";
-import { GoogleOutlined } from "@ant-design/icons"; // Ou use: import { FcGoogle } from 'react-icons/fc';
+import { FcGoogle } from 'react-icons/fc';
 import { auth, googleProvider, signInWithPopup } from "./firebase/firebase";
 
 function Login({ onLogin }) {
@@ -94,7 +95,7 @@ function Login({ onLogin }) {
             <GoogleContainer>
               <p>Ou entre com:</p>
               <GoogleButton type="button" onClick={handleGoogleSignIn}>
-                <GoogleOutlined
+                <FcGoogle
                   style={{ fontSize: "20px", marginRight: "10px" }}
                 />
                 Continuar com Google
