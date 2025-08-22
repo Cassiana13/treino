@@ -5,15 +5,20 @@ export const HomeContainer = styled.div`
   padding: 1rem;
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.darkBg};
+  background: linear-gradient(135deg, 
+    ${({ theme }) => theme.colors.darkBg} 0%, 
+    ${({ theme }) => theme.colors.darkBg} 50%,
+    ${({ theme }) => theme.colors.primary}15 100%
+  );
 
   @media (min-width: 768px) {
-    padding: 1.5rem;
+    padding: 2rem;
   }
 
   @media (min-width: 992px) {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2.5rem;
   }
 `;
 
@@ -21,16 +26,18 @@ export const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: ${({ theme }) => theme.colors.darkBg};
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  background: transparent; // Torna transparente
+  position: relative; // Remove sticky se não for necessário
+  border-bottom: 2px solid ${({ theme }) => theme.colors.primary}30; 
+ & > *:first-child {
+    margin-right: auto; // Empurra o botão para a direita
+  }
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    padding: 1.5rem 0;
+    gap:3rem;
   }
 `;
 
@@ -38,44 +45,50 @@ export const Title = styled.h1`
   color: ${({ theme }) => theme.colors.primary};
   font-family: ${({ theme }) => theme.fonts.heading};
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   margin: 0;
+  font-size: 2rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    font-size: 2rem;
-    text-align: left;
+    font-size: 2.5rem;
   }
 `;
 
 export const WeekGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (min-width: 992px) {
+  @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  @media (min-width: 1200px) {
+  @media (min-width: 1280px) {
     grid-template-columns: repeat(4, 1fr);
   }
 
-  @media (min-width: 1600px) {
+  @media (min-width: 1536px) {
     grid-template-columns: repeat(5, 1fr);
   }
 `;
 
 export const DayCard = styled.div`
   background: ${({ theme }) => theme.colors.cardBg};
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1.5rem;
   box-shadow: ${({ theme }) => theme.effects.shadow};
   transition: all 0.3s ease;
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
+  min-height: 200px; // Altura mínima para consistência
 
   &:hover {
     transform: translateY(-5px);
@@ -84,6 +97,7 @@ export const DayCard = styled.div`
 
   @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
     padding: 1rem;
+    min-height: 180px;
   }
 `;
 
@@ -93,6 +107,21 @@ export const DayTitle = styled.h2`
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid ${({ theme }) => theme.colors.accent};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.accent};
+  }
+
+  &::after {
+    content: "${props => props.expanded ? '−' : '+'}";
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
     font-size: 1.1rem;
@@ -105,38 +134,97 @@ export const TreinoList = styled.div`
   gap: 1rem;
 `;
 
-export const EmptyMessage = styled.p`
+export const EmptyMessage = styled.div`
   color: ${({ theme }) => theme.colors.textSecondary};
   text-align: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  padding: 2rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px dashed ${({ theme }) => theme.colors.primary}30;
+  
+  &::before {
+    content: "🏋️";
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
 `;
 
 export const LoadingMessage = styled.div`
   text-align: center;
-  padding: 2rem;
+  padding: 3rem;
   color: ${({ theme }) => theme.colors.textSecondary};
+  
+  .spin {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 1rem;
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 `;
 
 export const LogoutButton = styled.button`
   background: transparent;
-  color: ${({ theme }) => theme.colors.text};
-  border: none;
-  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  border: 1px solid ${({ theme }) => theme.colors.textSecondary}30;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: bold;
-  transition: all 0.3s;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 1.5rem;
+  opacity: 0.8;
+
+  .material-icons {
+    font-size: 22px;
+    transition: inherit;
+    gap:2px;
+  }
 
   &:hover {
     color: ${({ theme }) => theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.primary}15;
+    opacity: 1;
+    transform: translateY(-1px);
+    
+    .material-icons {
+      transform: scale(1.1);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    
+    .material-icons {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
-    width: 100%;
-    padding: 0.75rem;
+    width: 50px;
+    height: 50px;
+    margin-left: 1rem;
+    
+    .material-icons {
+      font-size: 17px;
+    }
   }
 `;
 
@@ -163,13 +251,20 @@ export const ToggleIcon = styled.span`
 `;
 export const FormFloatingWrapper = styled.div`
   background: ${({ theme }) => theme.colors.cardBg};
-  padding: 1.5rem;
-  margin: 1rem;
-  border-radius: 8px;
+  padding: 2rem;
+  margin: 2rem 0;
+  border-radius: 12px;
   box-shadow: ${({ theme }) => theme.effects.shadow};
+  border: 1px solid ${({ theme }) => theme.colors.primary}20;
   position: sticky;
-  top: 80px;
+  top: 20px;
   z-index: 5;
+  
+  @media (max-width: 768px) {
+    position: static;
+    margin: 1rem 0;
+    padding: 1.5rem;
+  }
 `;
 export const FormTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text};

@@ -31,7 +31,7 @@ function Home({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [treinoEdit, setTreinoEdit] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  const [deletingId, setDeletingId] = useState(null);
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const [expandedDays, setExpandedDays] = useState({
     Segunda: false,
@@ -50,8 +50,11 @@ function Home({ onLogout }) {
   const formRef = useRef(null);
   const editTreino = (treino) => {
     setTreinoEdit(treino);
-    // Rola a página até o formulário
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setTimeout(() => {
+      // Rola a página até o formulário
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    }, 100)
   };
   useEffect(() => {
     const carregarTreinos = async () => {
@@ -91,11 +94,16 @@ function Home({ onLogout }) {
   };
 
   const deleteTreino = async (id) => {
+     if (!window.confirm("Tem certeza que deseja excluir este treino?")) {
+    return;
+  }
     try {
       await deleteWorkout(id);
       setTreinos(treinos.filter((treino) => treino.id !== id));
     } catch (error) {
       console.error("Erro ao remover treino:", error);
+    } finally {
+      setDeletingId(null)
     }
   };
 
@@ -119,7 +127,12 @@ function Home({ onLogout }) {
       <Header>
         <Title>Meus Treinos</Title>
         <LogoutButton onClick={handleLogout} disabled={isLoggingOut}>
-          {isLoggingOut ? "Saindo..." : "Sair"}
+         
+          {isLoggingOut ? "Saindo..." : ""}
+          
+ <span className="material-icons">
+    {isLoggingOut ? "hourglass_empty" : "logout"}
+  </span>
         </LogoutButton>
       </Header>
 
@@ -158,10 +171,13 @@ function Home({ onLogout }) {
                           treino={treino}
                           onEdit={editTreino}
                           onDelete={deleteTreino}
+                          isDeleting={deletingId === treino.id}
                         />
                       ))
                     ) : (
-                      <EmptyMessage>Nenhum treino cadastrado</EmptyMessage>
+                      <EmptyMessage>Nenhum treino cadastrado
+                        <small>Clique no formulário acima para adicionar</small>
+                      </EmptyMessage>
                     )}
                   </TreinoList>
                 )}

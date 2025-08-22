@@ -31,7 +31,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <GlobalStyles />
       <Router>
-        <div style={{ padding: "20px" }}>
+        <div >
           <Routes>
             {/* Rota de login */}
             <Route

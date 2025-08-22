@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   EditSection,
   FormGroup,
@@ -7,53 +7,85 @@ import {
   FormWrapper,
   SelectWrapper,
   EditIndicator,
+  ButtonContainer,
 } from "../styles/TreinoFrom.styles";
 import { useTheme } from "styled-components";
 
 const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
   const theme = useTheme();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [treino, setTreino] = useState({
     nome: "",
     peso: "",
-    repeticao: "",
-    series: "",
+    repeticao: "12",
+    series: "3",
     dia: "Segunda",
   });
+
+  const resetForm = useCallback(() => {
+    setTreino({
+      nome: "",
+      peso: "",
+      repeticao: "12",
+      series: "3",
+      dia: "Segunda",
+    });
+  }, []);
 
   useEffect(() => {
     if (treinoEdit) {
       setTreino(treinoEdit);
+      setTimeout(() => {
+        document.querySelector('input[name="nome"]')?.focus();
+      }, 100);
     }
+  }, [treinoEdit]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && treinoEdit) {
+        handleCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [treinoEdit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setTreino({ ...treino, [name]: value });
+    
+    if (name === "peso" || name === "repeticao" || name === "series") {
+      const numericValue = Math.max(0, Number(value) || 0);
+      setTreino(prev => ({ ...prev, [name]: numericValue }));
+    } else {
+      setTreino(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(treino);
-    if (!treinoEdit) {
-      setTreino({
-        nome: "",
-        peso: "",
-        repeticao: "",
-        series: "",
-        dia: "Segunda",
-      });
+    
+    if (!treino.nome.trim() || !treino.repeticao || !treino.series) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await onSubmit(treino);
+      if (!treinoEdit) {
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Erro ao salvar treino:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCancel = () => {
     setTreinoEdit(null);
-    setTreino({
-      nome: "",
-      peso: "",
-      repeticao: "",
-      series: "",
-      dia: "Segunda",
-    });
+    resetForm();
   };
 
   return (
@@ -70,6 +102,7 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
               value={treino.nome}
               onChange={handleChange}
               required
+              autoFocus={!!treinoEdit}
             />
           </FormGroup>
 
@@ -77,9 +110,11 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
             <input
               type="number"
               name="peso"
-              placeholder="Peso (kg)"
+              placeholder="Peso em kg (opcional)"
               value={treino.peso}
               onChange={handleChange}
+              min="0"
+              step="0.5"
             />
           </FormGroup>
 
@@ -87,10 +122,11 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
             <input
               type="number"
               name="repeticao"
-              placeholder="Repetições"
+              placeholder="Número de repetições"
               value={treino.repeticao}
               onChange={handleChange}
               required
+              min="1"
             />
           </FormGroup>
 
@@ -98,10 +134,11 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
             <input
               type="number"
               name="series"
-              placeholder="Séries"
+              placeholder="Número de séries"
               value={treino.series}
               onChange={handleChange}
               required
+              min="1"
             />
           </FormGroup>
 
@@ -117,15 +154,27 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
             </SelectWrapper>
           </FormGroup>
 
-          <SaveButton type="submit">
-            {treinoEdit ? "Salvar Alterações" : "Adicionar Treino"}
-          </SaveButton>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+           < ButtonContainer>
+            <SaveButton 
+              type="submit" 
+              disabled={isSubmitting || !treino.nome.trim()}
+            >
+              {isSubmitting ? "Salvando..." : 
+               (treinoEdit ? "Salvar Alterações" : "Adicionar Treino")}
+            </SaveButton>
 
-          {treinoEdit && (
-            <CancelButton type="button" onClick={handleCancel}>
-              Cancelar
-            </CancelButton>
-          )}
+            {treinoEdit && (
+              <CancelButton 
+                type="button" 
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </CancelButton>
+            )}
+            </ButtonContainer>
+          </div>
         </form>
       </EditSection>
     </FormWrapper>

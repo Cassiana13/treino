@@ -22,7 +22,7 @@ export const theme = {
     smallMobile: "400px",
     mobile: "576px",
     tablet: "768px",
-    desktop: "992px",
+    desktop: "900px",
     large: "1200px",
   },
 };

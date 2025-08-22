@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { login } from "./services/authService";
@@ -15,40 +15,85 @@ import {
   Label,
   GoogleContainer,
   GoogleButton,
+  LoadingSpinner,
 } from "./styles/Login.styles";
-import { GoogleOutlined } from "@ant-design/icons"; // Ou use: import { FcGoogle } from 'react-icons/fc';
+import { GoogleOutlined } from "@ant-design/icons";
 import { auth, googleProvider, signInWithPopup } from "./firebase/firebase";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  useEffect(() => {
+    // Limpar erros após 5 segundos
+    if (erro) {
+      const timer = setTimeout(() => setErro(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [erro]);
 
   const handleGoogleSignIn = async () => {
     try {
+      setGoogleLoading(true);
+      setErro("");
       const result = await signInWithPopup(auth, googleProvider);
-      // Login bem-sucedido
-      console.log("Usuário logado:", result.user);
-      navigate("/"); // Redireciona para a página home
+      onLogin(result.user);
+      navigate("/home");
     } catch (error) {
       console.error("Erro no login com Google:", error);
-      alert(`Erro no login: ${error.message}`);
+      setErro(error.message || "Erro ao fazer login com Google.");
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
-  async function handleLogin(e) {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    
+    if (!validateEmail(email)) {
+      setErro("Por favor, insira um email válido.");
+      return;
+    }
+    
+    if (senha.length < 6) {
+      setErro("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+    
     try {
+      setLoading(true);
+      setErro("");
       const usuario = await login(email, senha);
       if (usuario) {
         onLogin(usuario);
         navigate("/home");
       }
-    } catch {
-      setErro("Erro ao fazer login. Tente novamente.");
+    } catch (error) {
+      setErro(error.message || "Erro ao fazer login. Verifique suas credenciais.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value);
+    if (erro) setErro("");
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !loading) {
+      handleLogin(e);
+    }
+  };
 
   function goToCadastro() {
     navigate("/cadastro");
@@ -63,16 +108,24 @@ function Login({ onLogin }) {
       >
         <Container>
           <Title>Entrar no Treino</Title>
-          {erro && <ErrorMessage>{erro}</ErrorMessage>}
+          
+          {erro && (
+            <ErrorMessage>
+              ⚠️ {erro}
+            </ErrorMessage>
+          )}
+
           <Form onSubmit={handleLogin}>
             <InputWrapper>
               <Input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleInputChange(setEmail)}
+                onKeyPress={handleKeyPress}
                 required
-                placeholder=" " // <-- esse espaço vazio ativa o :placeholder-shown
+                placeholder=" "
                 id="email"
+                disabled={loading || googleLoading}
               />
               <Label htmlFor="email">Email</Label>
             </InputWrapper>
@@ -81,27 +134,51 @@ function Login({ onLogin }) {
               <Input
                 type="password"
                 value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                onChange={handleInputChange(setSenha)}
+                onKeyPress={handleKeyPress}
                 required
                 placeholder=" "
                 id="senha"
+                disabled={loading || googleLoading}
+                minLength={6}
               />
               <Label htmlFor="senha">Senha</Label>
             </InputWrapper>
 
-            <Button type="submit">Entrar</Button>
+            <Button type="submit" disabled={loading || googleLoading}>
+              {loading ? (
+                <>
+                  <LoadingSpinner />
+                  Entrando...
+                </>
+              ) : (
+                "Entrar"
+              )}
+            </Button>
 
             <GoogleContainer>
               <p>Ou entre com:</p>
-              <GoogleButton type="button" onClick={handleGoogleSignIn}>
-                <GoogleOutlined
-                  style={{ fontSize: "20px", marginRight: "10px" }}
-                />
-                Continuar com Google
+              <GoogleButton 
+                type="button" 
+                onClick={handleGoogleSignIn}
+                disabled={loading || googleLoading}
+              >
+
+                
+                {googleLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <GoogleOutlined style={{ fontSize: "20px", marginRight: "10px" }} />
+                )}
+                {googleLoading ? "Conectando..." : "Continuar com Google"}
               </GoogleButton>
             </GoogleContainer>
           </Form>
-          <LinkButton onClick={goToCadastro}>
+
+          <LinkButton 
+            onClick={goToCadastro}
+            disabled={loading || googleLoading}
+          >
             Não tem conta? Cadastre-se
           </LinkButton>
         </Container>

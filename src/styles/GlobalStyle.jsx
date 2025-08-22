@@ -6,20 +6,30 @@ const GlobalStyles = createGlobalStyle`
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+   
+
+  }
+
+   html, body, #root {
+    height: 100%;
+    Width: 100%;
+   
+    overflow-x: hidden;
+   
   }
 
   body {
-    background: url('/gym-bg.jpg') no-repeat center center fixed;
+
     background-size: cover;
     font-family: ${({ theme }) => theme.fonts.main};
     color: ${({ theme }) => theme.colors.text};
     background-color: ${({ theme }) => theme.colors.darkBg};
     line-height: 1.6;
     min-height: 100vh;
-    padding: 20px;
-
+    overflow-x: hidden;
+    overflow-y: auto;
     @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
-      padding: 10px;
+   
       background-attachment: scroll;
     }
   }
