@@ -34,7 +34,6 @@ function Login({ onLogin }) {
   };
 
   useEffect(() => {
-    // Limpar erros após 5 segundos
     if (erro) {
       const timer = setTimeout(() => setErro(""), 5000);
       return () => clearTimeout(timer);
@@ -58,17 +57,17 @@ function Login({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     if (!validateEmail(email)) {
       setErro("Por favor, insira um email válido.");
       return;
     }
-    
+
     if (senha.length < 6) {
       setErro("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
-    
+
     try {
       setLoading(true);
       setErro("");
@@ -95,9 +94,9 @@ function Login({ onLogin }) {
     }
   };
 
-  function goToCadastro() {
+  const goToCadastro = () => {
     navigate("/cadastro");
-  }
+  };
 
   return (
     <PageWrapper>
@@ -108,12 +107,8 @@ function Login({ onLogin }) {
       >
         <Container>
           <Title>Entrar no Treino</Title>
-          
-          {erro && (
-            <ErrorMessage>
-              ⚠️ {erro}
-            </ErrorMessage>
-          )}
+
+          {erro && <ErrorMessage>⚠️ {erro}</ErrorMessage>}
 
           <Form onSubmit={handleLogin}>
             <InputWrapper>
@@ -158,13 +153,11 @@ function Login({ onLogin }) {
 
             <GoogleContainer>
               <p>Ou entre com:</p>
-              <GoogleButton 
-                type="button" 
+              <GoogleButton
+                type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading || googleLoading}
               >
-
-                
                 {googleLoading ? (
                   <LoadingSpinner />
                 ) : (
@@ -175,10 +168,7 @@ function Login({ onLogin }) {
             </GoogleContainer>
           </Form>
 
-          <LinkButton 
-            onClick={goToCadastro}
-            disabled={loading || googleLoading}
-          >
+          <LinkButton onClick={goToCadastro} disabled={loading || googleLoading}>
             Não tem conta? Cadastre-se
           </LinkButton>
         </Container>
