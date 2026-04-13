@@ -7,36 +7,61 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: {
-        enabled: true, // Para você conseguir testar no localhost
+
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "script" ||
+              request.destination === "style",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "assets-cache",
+            },
+          },
+          {
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
+              },
+            },
+          },
+          {
+            urlPattern: ({ url }) =>
+              url.origin.includes("firebase") || url.pathname.includes("/api"),
+            handler: "NetworkOnly",
+          },
+        ],
       },
+
       manifest: {
         name: "Meu App de Treino",
         short_name: "TreinoApp",
-        description: "Aplicativo para gestão de treinos e evolução",
         theme_color: "#000000",
         background_color: "#000000",
         display: "standalone",
         start_url: "/",
-        id: "/",
         icons: [
           {
             src: "/logo192.png",
-            sizes: "192x192", // Ajustado para o tamanho real da imagem
+            sizes: "192x192",
             type: "image/png",
-            purpose: "any",
           },
           {
             src: "/logo512.png",
-            sizes: "512x512", // Ajustado para o tamanho real da imagem
+            sizes: "512x512",
             type: "image/png",
-            purpose: "any",
           },
         ],
       },
     }),
   ],
-  optimizeDeps: {
-    include: ["styled-components"],
-  },
 });
