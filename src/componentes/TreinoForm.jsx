@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   EditSection,
   FormGroup,
@@ -9,28 +9,37 @@ import {
   EditIndicator,
   ButtonContainer,
 } from "../styles/TreinoFrom.styles";
-import { useTheme } from "styled-components";
+
+const DIAS_SEMANA = [
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+  "Domingo",
+];
+
+const FORM_INICIAL = {
+  nome: "",
+  peso: "",
+  repeticao: "12",
+  series: "3",
+  dia: "Segunda",
+};
 
 const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
-  const theme = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [treino, setTreino] = useState({
-    nome: "",
-    peso: "",
-    repeticao: "12",
-    series: "3",
-    dia: "Segunda",
-  });
+  const [treino, setTreino] = useState(FORM_INICIAL);
 
   const resetForm = useCallback(() => {
-    setTreino({
-      nome: "",
-      peso: "",
-      repeticao: "12",
-      series: "3",
-      dia: "Segunda",
-    });
+    setTreino(FORM_INICIAL);
   }, []);
+
+  const handleCancel = useCallback(() => {
+    setTreinoEdit(null);
+    resetForm();
+  }, [setTreinoEdit, resetForm]);
 
   useEffect(() => {
     if (treinoEdit) {
@@ -41,41 +50,35 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
     }
   }, [treinoEdit]);
 
+  // ✅ handleCancel incluído nas dependências
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && treinoEdit) {
         handleCancel();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [treinoEdit]);
+  }, [treinoEdit, handleCancel]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     if (name === "peso" || name === "repeticao" || name === "series") {
-      const numericValue = Math.max(0, Number(value) || 0);
-      setTreino(prev => ({ ...prev, [name]: numericValue }));
+      const numericValue = value === "" ? "" : Math.max(0, Number(value) || 0);
+      setTreino((prev) => ({ ...prev, [name]: numericValue }));
     } else {
-      setTreino(prev => ({ ...prev, [name]: value }));
+      setTreino((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!treino.nome.trim() || !treino.repeticao || !treino.series) {
-      return;
-    }
-    
+    if (!treino.nome.trim() || !treino.repeticao || !treino.series) return;
+
     setIsSubmitting(true);
     try {
       await onSubmit(treino);
-      if (!treinoEdit) {
-        resetForm();
-      }
+      if (!treinoEdit) resetForm();
     } catch (error) {
       console.error("Erro ao salvar treino:", error);
     } finally {
@@ -83,15 +86,10 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
     }
   };
 
-  const handleCancel = () => {
-    setTreinoEdit(null);
-    resetForm();
-  };
-
   return (
     <FormWrapper>
       <EditSection>
-        {treinoEdit && <EditIndicator>EDITANDO TREINO</EditIndicator>}
+        {treinoEdit && <EditIndicator>✏️ Editando treino</EditIndicator>}
         <h2>{treinoEdit ? "Editar Treino" : "Adicionar Treino"}</h2>
         <form onSubmit={handleSubmit}>
           <FormGroup>
@@ -142,39 +140,38 @@ const TreinoForm = ({ onSubmit, treinoEdit, setTreinoEdit }) => {
             />
           </FormGroup>
 
-          <FormGroup>
-            <SelectWrapper>
-              <select name="dia" value={treino.dia} onChange={handleChange}>
-                <option value="Segunda">Segunda-feira</option>
-                <option value="Terça">Terça-feira</option>
-                <option value="Quarta">Quarta-feira</option>
-                <option value="Quinta">Quinta-feira</option>
-                <option value="Sexta">Sexta-feira</option>
-              </select>
-            </SelectWrapper>
-          </FormGroup>
+          <SelectWrapper>
+            <select name="dia" value={treino.dia} onChange={handleChange}>
+              {DIAS_SEMANA.map((dia) => (
+                <option key={dia} value={dia}>
+                  {dia === "Sábado" || dia === "Domingo" ? dia : `${dia}-feira`}
+                </option>
+              ))}
+            </select>
+          </SelectWrapper>
 
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-           < ButtonContainer>
-            <SaveButton 
-              type="submit" 
+          <ButtonContainer>
+            <SaveButton
+              type="submit"
               disabled={isSubmitting || !treino.nome.trim()}
             >
-              {isSubmitting ? "Salvando..." : 
-               (treinoEdit ? "Salvar Alterações" : "Adicionar Treino")}
+              {isSubmitting
+                ? "Salvando..."
+                : treinoEdit
+                  ? "Salvar Alterações"
+                  : "Adicionar Treino"}
             </SaveButton>
 
             {treinoEdit && (
-              <CancelButton 
-                type="button" 
+              <CancelButton
+                type="button"
                 onClick={handleCancel}
                 disabled={isSubmitting}
               >
                 Cancelar
               </CancelButton>
             )}
-            </ButtonContainer>
-          </div>
+          </ButtonContainer>
         </form>
       </EditSection>
     </FormWrapper>

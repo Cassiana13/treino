@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { logout } from "./services/authService.js";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,7 +7,6 @@ import {
   updateWorkout,
   deleteWorkout,
 } from "./services/treinosService";
-import { useRef } from "react";
 import TreinoForm from "./componentes/TreinoForm";
 import TreinoItem from "./componentes/TreinoItem";
 import { auth } from "./firebase/firebase.js";
@@ -22,8 +21,25 @@ import {
   EmptyMessage,
   LoadingMessage,
   LogoutButton,
-  FormFloatingWrapper,
+  ConfirmOverlay,
+  ConfirmBox,
+  ConfirmTitle,
+  ConfirmActions,
+  ConfirmCancel,
+  ConfirmDelete,
+  ErrorToast,
 } from "./styles/Home.styles.jsx";
+
+// Todos os dias da semana incluindo fim de semana
+const DIAS_SEMANA = [
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+  "Domingo",
+];
 
 function Home({ onLogout }) {
   const navigate = useNavigate();
@@ -32,30 +48,30 @@ function Home({ onLogout }) {
   const [treinoEdit, setTreinoEdit] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
-  const [expandedDays, setExpandedDays] = useState({
-    Segunda: false,
-    Terça: false,
-    Quarta: false,
-    Quinta: false,
-    Sexta: false,
-  });
+  const [errorMsg, setErrorMsg] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, nome }
+  const [expandedDays, setExpandedDays] = useState(
+    Object.fromEntries(DIAS_SEMANA.map((d) => [d, false])),
+  );
+  const formRef = useRef(null);
+
+  // Exibe erro por 4 segundos
+  const showError = (msg) => {
+    setErrorMsg(msg);
+    setTimeout(() => setErrorMsg(""), 4000);
+  };
 
   const toggleDay = (dia) => {
-    setExpandedDays((prev) => ({
-      ...prev,
-      [dia]: !prev[dia],
-    }));
+    setExpandedDays((prev) => ({ ...prev, [dia]: !prev[dia] }));
   };
-  const formRef = useRef(null);
+
   const editTreino = (treino) => {
     setTreinoEdit(treino);
     setTimeout(() => {
-      // Rola a página até o formulário
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-    }, 100)
+    }, 100);
   };
+
   useEffect(() => {
     const carregarTreinos = async () => {
       try {
@@ -63,11 +79,11 @@ function Home({ onLogout }) {
         setTreinos(dados || []);
       } catch (error) {
         console.error("Erro ao buscar treinos:", error);
+        showError("Não foi possível carregar os treinos. Tente novamente.");
       } finally {
         setLoading(false);
       }
     };
-
     carregarTreinos();
   }, []);
 
@@ -78,32 +94,39 @@ function Home({ onLogout }) {
 
       if (treinoEdit) {
         await updateWorkout(treinoEdit.id, treino);
-        setTreinos(
-          treinos.map((t) => (t.id === treinoEdit.id ? { ...t, ...treino } : t))
+        setTreinos((prev) =>
+          prev.map((t) => (t.id === treinoEdit.id ? { ...t, ...treino } : t)),
         );
       } else {
-        const docRef = await addWorkout(user.uid, treino);
-        const novoTreino = { id: docRef.id, ...treino };
-        setTreinos([...treinos, novoTreino]);
+        const novoTreino = await addWorkout(user.uid, treino);
+        setTreinos((prev) => [...prev, novoTreino]);
       }
-
       setTreinoEdit(null);
     } catch (error) {
       console.error("Erro ao salvar treino:", error);
+      showError("Erro ao salvar o treino. Tente novamente.");
     }
   };
 
-  const deleteTreino = async (id) => {
-     if (!window.confirm("Tem certeza que deseja excluir este treino?")) {
-    return;
-  }
+  // Abre modal de confirmação
+  const solicitarDelete = (id, nome) => {
+    setConfirmDelete({ id, nome });
+  };
+
+  // Executado após confirmação no modal
+  const confirmarDelete = async () => {
+    if (!confirmDelete) return;
+    const { id } = confirmDelete;
+    setConfirmDelete(null);
+    setDeletingId(id);
     try {
       await deleteWorkout(id);
-      setTreinos(treinos.filter((treino) => treino.id !== id));
+      setTreinos((prev) => prev.filter((t) => t.id !== id));
     } catch (error) {
       console.error("Erro ao remover treino:", error);
+      showError("Erro ao remover o treino. Tente novamente.");
     } finally {
-      setDeletingId(null)
+      setDeletingId(null);
     }
   };
 
@@ -113,10 +136,9 @@ function Home({ onLogout }) {
       await logout();
       onLogout();
       navigate("/", { replace: true });
-      setTreinos([]);
-      setTreinoEdit(null);
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
+      showError("Erro ao sair. Tente novamente.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -124,15 +146,43 @@ function Home({ onLogout }) {
 
   return (
     <HomeContainer>
+      {/* Toast de erro */}
+      {errorMsg && <ErrorToast>{errorMsg}</ErrorToast>}
+
+      {/* Modal de confirmação de delete */}
+      {confirmDelete && (
+        <ConfirmOverlay>
+          <ConfirmBox>
+            <ConfirmTitle>Remover treino?</ConfirmTitle>
+            <p>
+              Tem certeza que deseja remover{" "}
+              <strong>{confirmDelete.nome}</strong>? Essa ação não pode ser
+              desfeita.
+            </p>
+            <ConfirmActions>
+              <ConfirmCancel onClick={() => setConfirmDelete(null)}>
+                Cancelar
+              </ConfirmCancel>
+              <ConfirmDelete onClick={confirmarDelete}>Remover</ConfirmDelete>
+            </ConfirmActions>
+          </ConfirmBox>
+        </ConfirmOverlay>
+      )}
+
       <Header>
         <Title>Meus Treinos</Title>
-        <LogoutButton onClick={handleLogout} disabled={isLoggingOut}>
-         
-          {isLoggingOut ? "Saindo..." : ""}
-          
- <span className="material-icons">
-    {isLoggingOut ? "hourglass_empty" : "logout"}
-  </span>
+        <LogoutButton
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          aria-label={isLoggingOut ? "Saindo..." : "Sair da conta"}
+          title={isLoggingOut ? "Saindo..." : "Sair"}
+        >
+          <span className="material-icons">
+            {isLoggingOut ? "hourglass_empty" : "logout"}
+          </span>
+          <span className="logout-label">
+            {isLoggingOut ? "Saindo..." : "Sair"}
+          </span>
         </LogoutButton>
       </Header>
 
@@ -151,16 +201,15 @@ function Home({ onLogout }) {
         </LoadingMessage>
       ) : (
         <WeekGrid>
-          {diasSemana.map((dia) => {
-            const treinosDoDia = treinos.filter((treino) => treino.dia === dia);
-
+          {DIAS_SEMANA.map((dia) => {
+            const treinosDoDia = treinos.filter((t) => t.dia === dia);
             return (
               <DayCard key={dia}>
                 <DayTitle
                   onClick={() => toggleDay(dia)}
-                  style={{ cursor: "pointer" }}
+                  expanded={expandedDays[dia]}
                 >
-                  {dia} {expandedDays[dia] ? "−" : "+"}
+                  {dia}
                 </DayTitle>
                 {expandedDays[dia] && (
                   <TreinoList>
@@ -170,13 +219,14 @@ function Home({ onLogout }) {
                           key={treino.id}
                           treino={treino}
                           onEdit={editTreino}
-                          onDelete={deleteTreino}
+                          onDelete={(id) => solicitarDelete(id, treino.nome)}
                           isDeleting={deletingId === treino.id}
                         />
                       ))
                     ) : (
-                      <EmptyMessage>Nenhum treino cadastrado
-                        <small>Clique no formulário acima para adicionar</small>
+                      <EmptyMessage>
+                        <span>Nenhum treino</span>
+                        <small>Adicione pelo formulário acima</small>
                       </EmptyMessage>
                     )}
                   </TreinoList>
@@ -189,4 +239,5 @@ function Home({ onLogout }) {
     </HomeContainer>
   );
 }
+
 export default Home;

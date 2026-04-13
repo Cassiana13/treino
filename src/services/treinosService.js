@@ -1,4 +1,3 @@
-// src/services/workoutsService.js
 import {
   collection,
   getDocs,
@@ -6,65 +5,51 @@ import {
   updateDoc,
   doc,
   deleteDoc,
+  getDoc,
 } from "firebase/firestore";
-import { db } from "../firebase/firebase";
-import { auth } from "../firebase/firebase";
+import { db, auth } from "../firebase/firebase";
 
-// Helper: get user's workouts collection reference
+// Helper: retorna a coleção de treinos do usuário autenticado
 function getUserWorkoutsCollection() {
   const user = auth.currentUser;
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-  // Coleção: 'users/{uid}/workouts'
+  if (!user) throw new Error("Usuário não autenticado");
   return collection(db, "users", user.uid, "workouts");
 }
 
-// Fetch all workouts for current user
+// Helper: valida que o documento pertence ao usuário atual
+async function assertOwnership(id) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Usuário não autenticado");
+  const ref = doc(db, "users", user.uid, "workouts", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Treino não encontrado ou sem permissão");
+  return ref;
+}
+
+// Busca todos os treinos do usuário
 export async function fetchWorkouts() {
   const workoutsCol = getUserWorkoutsCollection();
   const snapshot = await getDocs(workoutsCol);
-  const workouts = [];
-  snapshot.forEach((doc) => {
-    workouts.push({ id: doc.id, ...doc.data() });
-  });
-  return workouts;
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-// Add a new workout for current user
-/*export async function addWorkout(workoutData) {
-  const workoutsCol = getUserWorkoutsCollection();
-  const docRef = await addDoc(workoutsCol, workoutData);
-  return { id: docRef.id, ...workoutData };
-}
+// Adiciona novo treino para o usuário atual
 export async function addWorkout(userId, treino) {
-  const userRef = doc(db, "users", userId);
-  const workoutsRef = collection(userRef, "workouts");
-  return await addDoc(workoutsRef, treino);
-}
-*/
-export async function addWorkout(userId, treino) {
-  const userRef = doc(db, "users", userId);
-  const workoutsRef = collection(userRef, "workouts");
+  const user = auth.currentUser;
+  if (!user || user.uid !== userId) throw new Error("Usuário não autenticado");
+  const workoutsRef = collection(db, "users", userId, "workouts");
   const docRef = await addDoc(workoutsRef, treino);
-  return { id: docRef.id, ...treino }; // Retornando no mesmo formato que fetchWorkouts
-}
-// Update existing workout by ID for current user
-export async function updateWorkout(id, updatedData) {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-  const workoutDocRef = doc(db, "users", user.uid, "workouts", id);
-  await updateDoc(workoutDocRef, updatedData);
+  return { id: docRef.id, ...treino };
 }
 
-// Delete workout by ID for current user
+// Atualiza treino — valida ownership antes
+export async function updateWorkout(id, updatedData) {
+  const ref = await assertOwnership(id);
+  await updateDoc(ref, updatedData);
+}
+
+// Deleta treino — valida ownership antes
 export async function deleteWorkout(id) {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-  const workoutDocRef = doc(db, "users", user.uid, "workouts", id);
-  await deleteDoc(workoutDocRef);
+  const ref = await assertOwnership(id);
+  await deleteDoc(ref);
 }

@@ -3,25 +3,22 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBBJjfrhCH2gN5w-Cj0RR4Ai92HYM9L-rw",
-  authDomain: "treinos-f44e7.firebaseapp.com",
-  projectId: "treinos-f44e7",
-  storageBucket: "treinos-f44e7.firebasestorage.app",
-  messagingSenderId: "49419231884",
-  appId: "1:49419231884:web:c2a3b373fe4ccfe31cd1a9",
-  measurementId: "G-R4CTFE4V5X",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Configuração do provedor Google
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: "select_account",
 });
 
-// Exportações
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export { googleProvider, signInWithPopup };
